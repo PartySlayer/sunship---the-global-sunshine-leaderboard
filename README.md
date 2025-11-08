@@ -2,7 +2,7 @@
 
 > The world’s only real-time, unbiased, scientifically questionable ranking of nations by current sunlight exposure.
 
-Our sophisticated systems calculate the **Sunny Score** for ten capital cities, based on the world’s most viral countries - totally, *definitely* not hardcoded inside `countries.json`.)
+Our sophisticated systems calculate the **Sunny Score** for ten capital cities, based on the world’s most viral countries - totally, *definitely* not hardcoded inside `countries.json`)
 
 **Data source:** [OpenWeatherMap](https://openweathermap.org/api)  
 **Algorithm:** proprietary chaos flubber™
@@ -70,3 +70,8 @@ The Sunny Score is a top-secret* function combining:
 
 Try to modify the json file adding new cities and refresh the leaderboard!
 New data will be retrieved from /api/leaderboard GET request:
+
+<img width="1236" height="820" alt="Default coutntries.json" src="https://github.com/user-attachments/assets/64e38dc1-845e-4707-9840-3a7c3da4224d" />
+
+<img width="1530" height="592" alt="Modified countries.json" src="https://github.com/user-attachments/assets/765cbc58-34fb-47d8-b44f-f2aa5b77a727" />
+
