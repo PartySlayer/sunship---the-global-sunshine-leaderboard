@@ -18,10 +18,11 @@ Our sophisticated systems calculate the **Sunny Score** for ten capital cities, 
 
 ## ⚙️ Technical Bits
 
-- **Application logic:** `fetcher.py` — handles API calls, caching, and scoring.
-- **Business logic:** `main.py` — orchestrates leaderboard updates and presentation.
+- **Application logic:** `fetcher.py` - handles API calls, caching, and scoring.
+- **Business logic:** `main.py` - orchestrates leaderboard updates and presentation.
 - **Cache system:** JSON dump of leaderboard response (`cache/leaderboard.json`)  
   Default TTL: **1 hour** (based on timestamp).
+- **Static frontend:** Served via fastAPI mounted using the StaticFiles class
 
 ### 🧮 Scoring Formula
 
@@ -30,7 +31,7 @@ The Sunny Score is a top-secret* function combining:
 - temperature,
 - cloudiness,
 - visibility,
-- a mysterious “clear sky” bonus.
+- a secret performance bonus.
 
 > \* okay fine: `(100 - clouds) + (temp / 2) + (visibility / 1000) [+25 if clear sky]`
 
@@ -66,7 +67,7 @@ The Sunny Score is a top-secret* function combining:
 
     ```
 
-## Customize it and have fun
+## 🛠️ Customize it and have fun
 
 Try to modify the json file adding new cities and refresh the leaderboard!
 New data will be retrieved from /api/leaderboard GET request:
