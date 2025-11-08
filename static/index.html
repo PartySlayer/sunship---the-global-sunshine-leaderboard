@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Sunshine Leaderboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.8); }
+        }
+        
+        .sunny-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .leaderboard-row {
+            transition: all 0.3s ease;
+        }
+        
+        .leaderboard-row:hover {
+            transform: translateX(5px);
+        }
+        
+        .rank-medal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #f59e0b;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background-color: #10b981;
+        }
+        
+        .notification.error {
+            background-color: #ef4444;
+        }
+        
+        .notification.info {
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-amber-50 min-h-screen">
+    <div id="notification" class="notification"></div>
+    
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-sun text-amber-500 text-3xl sunny-glow"></i>
+                    <h1 class="text-3xl font-bold text-gray-800">Global Sunshine Leaderboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="health-status" class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Checking...</span>
+                    </div>
+                    <button id="refresh-btn" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-amber-400 to-orange-500 p-4">
+                <h2 class="text-xl font-semibold text-white">Top Sunshine Locations</h2>
+            </div>
+            
+            <div class="p-6">
+                <div id="loading" class="flex justify-center items-center py-12">
+                    <div class="loading-spinner"></div>
+                </div>
+                
+                <div id="leaderboard-container" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Rank</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Location</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Country</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Sunshine Hours</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Days per Year</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <!-- Data will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="last-updated" class="mt-4 text-sm text-gray-500 text-right">
+                        Last updated: Loading...
+                    </div>
+                </div>
+                
+                <div id="error-message" class="hidden py-12 text-center">
+                    <i class="fas fa-exclamation-triangle text-5xl text-amber-500 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Unable to Load Data</h3>
+                    <p class="text-gray-600 mb-4">There was a problem loading the leaderboard data. Please try again.</p>
+                    <button id="retry-btn" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-trophy text-amber-500 text-2xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800">Top Location</h3>
+                </div>
+                <p id="top-location" class="text-gray-600">Loading...</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-globe-americas text-blue-500 text-2xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800">Countries Represented</h3>
+                </div>
+                <p id="countries-count" class="text-gray-600">Loading...</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-chart-line text-green-500 text-2xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800">Average Sunshine</h3>
+                </div>
+                <p id="average-sunshine" class="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 Global Sunshine Leaderboard. All rights reserved.</p>
+            <p class="mt-2">made with&nbsp;❤️ for global hack week: API week</p>
+        </div>
+    </footer>
+    
+    <script>
+        // DOM elements
+        const leaderboardBody = document.getElementById('leaderboard-body');
+        const loadingElement = document.getElementById('loading');
+        const leaderboardContainer = document.getElementById('leaderboard-container');
+        const errorMessage = document.getElementById('error-message');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const lastUpdated = document.getElementById('last-updated');
+        const healthStatus = document.getElementById('health-status');
+        const notification = document.getElementById('notification');
+        
+        // Statistics elements
+        const topLocation = document.getElementById('top-location');
+        const countriesCount = document.getElementById('countries-count');
+        const averageSunshine = document.getElementById('average-sunshine');
+        
+        // State
+        let leaderboardData = [];
+        let lastUpdatedTime = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchLeaderboard();
+            checkHealth();
+            
+            // Set up event listeners
+            refreshBtn.addEventListener('click', refreshLeaderboard);
+            retryBtn.addEventListener('click', fetchLeaderboard);
+            
+            // Auto-refresh every 5 minutes
+            setInterval(fetchLeaderboard, 5 * 60 * 1000);
+            
+            // Check health every minute
+            setInterval(checkHealth, 60 * 1000);
+        });
+        
+        // Fetch leaderboard data
+        async function fetchLeaderboard() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/leaderboard');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                leaderboardData = data.leaderboard || [];
+                lastUpdatedTime = new Date();
+                
+                renderLeaderboard();
+                updateStatistics();
+                showNotification('Leaderboard loaded successfully', 'success');
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                showError();
+                showNotification('Failed to load leaderboard data', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Refresh leaderboard with cache refresh
+        async function refreshLeaderboard() {
+            try {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<div class="loading-spinner inline-block w-4 h-4 mr-2"></div> Refreshing...';
+                
+                const response = await fetch('/api/refresh', { method: 'POST' });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                leaderboardData = data.leaderboard || [];
+                lastUpdatedTime = new Date();
+                
+                renderLeaderboard();
+                updateStatistics();
+                showNotification(data.message || 'Leaderboard refreshed successfully', 'success');
+            } catch (error) {
+                console.error('Error refreshing leaderboard:', error);
+                showNotification('Failed to refresh leaderboard', 'error');
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Refresh</span>';
+            }
+        }
+        
+        // Check API health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    healthStatus.innerHTML = `
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Healthy</span>
+                    `;
+                } else {
+                    throw new Error('API not healthy');
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+                healthStatus.innerHTML = `
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span class="text-sm text-gray-600">Unhealthy</span>
+                `;
+            }
+        }
+        
+        // Render leaderboard table
+        function renderLeaderboard() {
+            if (!leaderboardData.length) {
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-8 text-gray-500">No data available</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            leaderboardBody.innerHTML = leaderboardData.map((item, index) => {
+                const rank = index + 1;
+                let rankDisplay = rank;
+                let rankClass = '';
+                
+                if (rank === 1) {
+                    rankDisplay = '<i class="fas fa-medal text-yellow-500"></i>';
+                    rankClass = 'font-bold';
+                } else if (rank === 2) {
+                    rankDisplay = '<i class="fas fa-medal text-gray-400"></i>';
+                    rankClass = 'font-semibold';
+                } else if (rank === 3) {
+                    rankDisplay = '<i class="fas fa-medal text-amber-700"></i>';
+                    rankClass = 'font-semibold';
+                }
+                
+                return `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 leaderboard-row">
+                        <td class="py-3 px-4 ${rankClass}">${rankDisplay}</td>
+                        <td class="py-3 px-4">${item.location || 'N/A'}</td>
+                        <td class="py-3 px-4">${item.country || 'N/A'}</td>
+                        <td class="py-3 px-4 text-right">${item.sunshine_hours || 'N/A'}</td>
+                        <td class="py-3 px-4 text-right">${item.days_per_year || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            lastUpdated.textContent = `Last updated: ${lastUpdatedTime.toLocaleString()}`;
+            
+            leaderboardContainer.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+        }
+        
+        // Update statistics
+        function updateStatistics() {
+            if (!leaderboardData.length) return;
+            
+            // Top location
+            const top = leaderboardData[0];
+            topLocation.textContent = `${top.location || 'N/A'}, ${top.country || 'N/A'} with ${top.sunshine_hours || 'N/A'} hours`;
+            
+            // Countries count
+            const countries = new Set(leaderboardData.map(item => item.country).filter(Boolean));
+            countriesCount.textContent = countries.size;
+            
+            // Average sunshine
+            const avgSunshine = leaderboardData.reduce((sum, item) => {
+                const hours = parseFloat(item.sunshine_hours) || 0;
+                return sum + hours;
+            }, 0) / leaderboardData.length;
+            averageSunshine.textContent = `${avgSunshine.toFixed(1)} hours`;
+        }
+        
+        // Show loading state
+        function showLoading(isLoading) {
+            if (isLoading) {
+                loadingElement.classList.remove('hidden');
+                leaderboardContainer.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+            } else {
+                loadingElement.classList.add('hidden');
+            }
+        }
+        
+        // Show error state
+        function showError() {
+            loadingElement.classList.add('hidden');
+            leaderboardContainer.classList.add('hidden');
+            errorMessage.classList.remove('hidden');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+
+</body></html>
