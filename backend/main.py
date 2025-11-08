@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fetcher import get_leaderboard
 
 app = FastAPI(title="Global Sunshine Leaderboard")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")   
 
 app.add_middleware(
     CORSMiddleware,
