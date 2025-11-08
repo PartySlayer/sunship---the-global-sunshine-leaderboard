@@ -30,7 +30,7 @@ def fetch_weather(country):
         resp = requests.get(
             "https://api.openweathermap.org/data/2.5/weather",
             params={"q": country, "appid": API_KEY, "units": "metric"},
-            timeout=5
+            timeout=20
             
         )
         print(f"[DEBUG] Using API key: {API_KEY}")
