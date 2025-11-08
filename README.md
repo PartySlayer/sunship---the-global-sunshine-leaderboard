@@ -65,3 +65,8 @@ The Sunny Score is a top-secret* function combining:
    python3 main.py
 
     ```
+
+## Customize it and have fun
+
+Try to modify the json file adding new cities and refresh the leaderboard!
+New data will be retrieved from /api/leaderboard GET request:
