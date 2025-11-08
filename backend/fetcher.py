@@ -7,13 +7,14 @@ from dotenv import load_dotenv
 load_dotenv()
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 CACHE_FILE = "cache/leaderboard.json"
-COUNTRIES_FILE = 'back2/countries.json'
+COUNTRIES_FILE = 'backend/countries.json'
 CACHE_TTL = 3600  # seconds (1 hour)
 
 
 def load_countries():
     with open(COUNTRIES_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
+    
 
 
 def compute_sunny_score(temp, clouds, visibility, description):
@@ -30,10 +31,13 @@ def fetch_weather(country):
             "https://api.openweathermap.org/data/2.5/weather",
             params={"q": country, "appid": API_KEY, "units": "metric"},
             timeout=5
+            
         )
+        print(f"[DEBUG] Using API key: {API_KEY}")
+
         data = resp.json()
-        if resp.status_code != 200:
-            return None
+       # if resp.status_code != 200:
+        #    return None
 
         return {
             "country": country,
@@ -65,8 +69,9 @@ def build_leaderboard():
             "description": w["description"],
             "score": score
         })
-
+    print(results)
     leaderboard = sorted(results, key=lambda x: x["score"], reverse=True)
+    print(leaderboard)
     return leaderboard[:10]
 
 
@@ -93,4 +98,5 @@ def get_leaderboard(force_refresh=False):
             return cached
     leaderboard = build_leaderboard()
     save_cache(leaderboard)
+    print(leaderboard)
     return leaderboard
