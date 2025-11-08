@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Sunshine Leaderboard</title>
+    <title>Global Weather Leaderboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -22,16 +22,6 @@
         
         .leaderboard-row:hover {
             transform: translateX(5px);
-        }
-        
-        .rank-medal {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            font-weight: bold;
         }
         
         .loading-spinner {
@@ -77,6 +67,25 @@
         .notification.info {
             background-color: #3b82f6;
         }
+        
+        .weather-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .score-bar {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(to right, #10b981, #f59e0b, #ef4444);
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-amber-50 min-h-screen">
@@ -86,8 +95,11 @@
         <div class="container mx-auto px-4 py-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <i class="fas fa-sun text-amber-500 text-3xl sunny-glow"></i>
-                    <h1 class="text-3xl font-bold text-gray-800">Global Sunshine Leaderboard</h1>
+                    <i class="fas fa-cloud-sun text-amber-500 text-3xl sunny-glow"></i>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">Global Weather Leaderboard</h1>
+                        <p class="text-sm text-gray-600">Real-time weather conditions from around the world</p>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div id="health-status" class="flex items-center space-x-2">
@@ -105,8 +117,8 @@
     
     <main class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-amber-400 to-orange-500 p-4">
-                <h2 class="text-xl font-semibold text-white">Top Sunshine Locations</h2>
+            <div class="bg-gradient-to-r from-amber-400 to-blue-500 p-4">
+                <h2 class="text-xl font-semibold text-white">Current Weather Conditions</h2>
             </div>
             
             <div class="p-6">
@@ -121,9 +133,11 @@
                                 <tr class="border-b border-gray-200">
                                     <th class="text-left py-3 px-4 font-semibold text-gray-700">Rank</th>
                                     <th class="text-left py-3 px-4 font-semibold text-gray-700">Location</th>
-                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Country</th>
-                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Sunshine Hours</th>
-                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Days per Year</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Weather</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Temp (°C)</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Clouds (%)</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Visibility (m)</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-gray-700">Score</th>
                                 </tr>
                             </thead>
                             <tbody id="leaderboard-body">
@@ -140,7 +154,7 @@
                 <div id="error-message" class="hidden py-12 text-center">
                     <i class="fas fa-exclamation-triangle text-5xl text-amber-500 mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-800 mb-2">Unable to Load Data</h3>
-                    <p class="text-gray-600 mb-4">There was a problem loading the leaderboard data. Please try again.</p>
+                    <p class="text-gray-600 mb-4">There was a problem loading the weather data. Please try again.</p>
                     <button id="retry-btn" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
                         Try Again
                     </button>
@@ -152,9 +166,9 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center mb-4">
                     <i class="fas fa-trophy text-amber-500 text-2xl mr-3"></i>
-                    <h3 class="text-lg font-semibold text-gray-800">Top Location</h3>
+                    <h3 class="text-lg font-semibold text-gray-800">Best Weather</h3>
                 </div>
-                <p id="top-location" class="text-gray-600">Loading...</p>
+                <p id="best-location" class="text-gray-600">Loading...</p>
             </div>
             
             <div class="bg-white rounded-lg shadow-md p-6">
@@ -167,18 +181,25 @@
             
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center mb-4">
-                    <i class="fas fa-chart-line text-green-500 text-2xl mr-3"></i>
-                    <h3 class="text-lg font-semibold text-gray-800">Average Sunshine</h3>
+                    <i class="fas fa-thermometer-half text-green-500 text-2xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800">Average Temperature</h3>
                 </div>
-                <p id="average-sunshine" class="text-gray-600">Loading...</p>
+                <p id="average-temp" class="text-gray-600">Loading...</p>
+            </div>
+        </div>
+        
+        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Weather Conditions Breakdown</h3>
+            <div id="weather-breakdown" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Weather conditions will be inserted here -->
             </div>
         </div>
     </main>
     
     <footer class="bg-gray-800 text-white py-6 mt-12">
         <div class="container mx-auto px-4 text-center">
-            <p>© 2025 Global Sunshine Leaderboard. All rights reserved.</p>
-            <p class="mt-2">made with&nbsp;❤️ for global hack week: API week</p>
+            <p>© 2025 Global Weather Leaderboard. All rights reserved.</p>
+            <p class="mt-2">made with ❤️ for global hack week: API week</p>
         </div>
     </footer>
     
@@ -195,13 +216,15 @@
         const notification = document.getElementById('notification');
         
         // Statistics elements
-        const topLocation = document.getElementById('top-location');
+        const bestLocation = document.getElementById('best-location');
         const countriesCount = document.getElementById('countries-count');
-        const averageSunshine = document.getElementById('average-sunshine');
+        const averageTemp = document.getElementById('average-temp');
+        const weatherBreakdown = document.getElementById('weather-breakdown');
         
         // State
         let leaderboardData = [];
         let lastUpdatedTime = null;
+        let timestamp = null;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -231,15 +254,17 @@
                 
                 const data = await response.json();
                 leaderboardData = data.leaderboard || [];
+                timestamp = data.timestamp || null;
                 lastUpdatedTime = new Date();
                 
                 renderLeaderboard();
                 updateStatistics();
-                showNotification('Leaderboard loaded successfully', 'success');
+                updateWeatherBreakdown();
+                showNotification('Weather data loaded successfully', 'success');
             } catch (error) {
                 console.error('Error fetching leaderboard:', error);
                 showError();
-                showNotification('Failed to load leaderboard data', 'error');
+                showNotification('Failed to load weather data', 'error');
             } finally {
                 showLoading(false);
             }
@@ -259,14 +284,16 @@
                 
                 const data = await response.json();
                 leaderboardData = data.leaderboard || [];
+                timestamp = data.timestamp || null;
                 lastUpdatedTime = new Date();
                 
                 renderLeaderboard();
                 updateStatistics();
-                showNotification(data.message || 'Leaderboard refreshed successfully', 'success');
+                updateWeatherBreakdown();
+                showNotification(data.message || 'Weather data refreshed successfully', 'success');
             } catch (error) {
                 console.error('Error refreshing leaderboard:', error);
-                showNotification('Failed to refresh leaderboard', 'error');
+                showNotification('Failed to refresh weather data', 'error');
             } finally {
                 refreshBtn.disabled = false;
                 refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Refresh</span>';
@@ -301,12 +328,41 @@
             }
         }
         
+        // Get weather icon based on description
+        function getWeatherIcon(description) {
+            const desc = description.toLowerCase();
+            if (desc.includes('clear')) return '<i class="fas fa-sun text-yellow-500"></i>';
+            if (desc.includes('cloud')) return '<i class="fas fa-cloud text-gray-500"></i>';
+            if (desc.includes('rain')) return '<i class="fas fa-cloud-rain text-blue-500"></i>';
+            if (desc.includes('mist') || desc.includes('haze')) return '<i class="fas fa-smog text-gray-400"></i>';
+            if (desc.includes('snow')) return '<i class="fas fa-snowflake text-blue-300"></i>';
+            if (desc.includes('thunder')) return '<i class="fas fa-bolt text-purple-500"></i>';
+            return '<i class="fas fa-question text-gray-500"></i>';
+        }
+        
+        // Get score color based on value
+        function getScoreColor(score) {
+            if (score >= 120) return 'text-green-600 font-bold';
+            if (score >= 90) return 'text-blue-600 font-semibold';
+            if (score >= 60) return 'text-yellow-600';
+            return 'text-red-600';
+        }
+        
+        // Parse location string (format: "City,Country")
+        function parseLocation(locationStr) {
+            const parts = locationStr.split(',');
+            if (parts.length === 2) {
+                return { city: parts[0], country: parts[1] };
+            }
+            return { city: locationStr, country: 'Unknown' };
+        }
+        
         // Render leaderboard table
         function renderLeaderboard() {
             if (!leaderboardData.length) {
                 leaderboardBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-gray-500">No data available</td>
+                        <td colspan="7" class="text-center py-8 text-gray-500">No data available</td>
                     </tr>
                 `;
                 return;
@@ -328,18 +384,34 @@
                     rankClass = 'font-semibold';
                 }
                 
+                const location = parseLocation(item.country);
+                const scoreClass = getScoreColor(item.score);
+                
                 return `
                     <tr class="border-b border-gray-100 hover:bg-gray-50 leaderboard-row">
                         <td class="py-3 px-4 ${rankClass}">${rankDisplay}</td>
-                        <td class="py-3 px-4">${item.location || 'N/A'}</td>
-                        <td class="py-3 px-4">${item.country || 'N/A'}</td>
-                        <td class="py-3 px-4 text-right">${item.sunshine_hours || 'N/A'}</td>
-                        <td class="py-3 px-4 text-right">${item.days_per_year || 'N/A'}</td>
+                        <td class="py-3 px-4">
+                            <div>
+                                <div class="font-medium">${location.city}</div>
+                                <div class="text-sm text-gray-500">${location.country}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-6">
+                            <div class="flex items-center">
+                                ${getWeatherIcon(item.description)}
+                                <span class="ml-1">${item.description}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-right">${item.temp || 'N/A'}</td>
+                        <td class="py-3 px-4 text-right">${item.clouds || 'N/A'}</td>
+                        <td class="py-3 px-4 text-right">${item.visibility || 'N/A'}</td>
+                        <td class="py-3 px-4 text-right ${scoreClass}">${item.score || 'N/A'}</td>
                     </tr>
                 `;
             }).join('');
             
-            lastUpdated.textContent = `Last updated: ${lastUpdatedTime.toLocaleString()}`;
+            const updateTime = timestamp ? new Date(timestamp * 1000).toLocaleString() : lastUpdatedTime.toLocaleString();
+            lastUpdated.textContent = `Last updated: ${updateTime}`;
             
             leaderboardContainer.classList.remove('hidden');
             errorMessage.classList.add('hidden');
@@ -349,20 +421,55 @@
         function updateStatistics() {
             if (!leaderboardData.length) return;
             
-            // Top location
-            const top = leaderboardData[0];
-            topLocation.textContent = `${top.location || 'N/A'}, ${top.country || 'N/A'} with ${top.sunshine_hours || 'N/A'} hours`;
+            // Best location
+            const best = leaderboardData[0];
+            const bestLocationParsed = parseLocation(best.country);
+            bestLocation.innerHTML = `
+                <div class="font-medium">${bestLocationParsed.city}, ${bestLocationParsed.country}</div>
+                <div class="text-sm text-gray-500">${best.description} • Score: ${best.score}</div>
+            `;
             
             // Countries count
-            const countries = new Set(leaderboardData.map(item => item.country).filter(Boolean));
+            const countries = new Set(leaderboardData.map(item => {
+                const location = parseLocation(item.country);
+                return location.country;
+            }).filter(Boolean));
             countriesCount.textContent = countries.size;
             
-            // Average sunshine
-            const avgSunshine = leaderboardData.reduce((sum, item) => {
-                const hours = parseFloat(item.sunshine_hours) || 0;
-                return sum + hours;
+            // Average temperature
+            const avgTemp = leaderboardData.reduce((sum, item) => {
+                return sum + (parseFloat(item.temp) || 0);
             }, 0) / leaderboardData.length;
-            averageSunshine.textContent = `${avgSunshine.toFixed(1)} hours`;
+            averageTemp.textContent = `${avgTemp.toFixed(1)}°C`;
+        }
+        
+        // Update weather breakdown
+        function updateWeatherBreakdown() {
+            if (!leaderboardData.length) return;
+            
+            // Count weather conditions
+            const weatherCounts = {};
+            leaderboardData.forEach(item => {
+                const desc = item.description;
+                weatherCounts[desc] = (weatherCounts[desc] || 0) + 1;
+            });
+            
+            // Render weather breakdown
+            weatherBreakdown.innerHTML = Object.entries(weatherCounts).map(([description, count]) => {
+                const percentage = (count / leaderboardData.length * 100).toFixed(0);
+                return `
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <div class="flex items-center mb-2">
+                            ${getWeatherIcon(description)}
+                            <span class="font-medium">${description}</span>
+                        </div>
+                        <div class="text-sm text-gray-600">${count} locations (${percentage}%)</div>
+                        <div class="score-bar mt-2">
+                            <div class="score-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
         
         // Show loading state
@@ -394,5 +501,5 @@
             }, 3000);
         }
     </script>
-
-</body></html>
+</body>
+</html>

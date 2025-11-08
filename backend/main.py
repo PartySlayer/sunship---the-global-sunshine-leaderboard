@@ -3,8 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fetcher import get_leaderboard
 
-app = FastAPI(title="Global Sunshine Leaderboard")
-app.mount("/", StaticFiles(directory="static", html=True), name="static")   
+app = FastAPI(title="Global Sunshine Leaderboard")   
 
 app.add_middleware(
     CORSMiddleware,
@@ -13,7 +12,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/api/leaderboard")
 def leaderboard():
@@ -31,6 +29,11 @@ def refresh():
 def health():
     return {"status": "ok"}
 
+# STATIC FILES GOES AFTER ROUTES ELSE ROUTES WON'T BE MOUNTED AND WILL CONFLICT
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
